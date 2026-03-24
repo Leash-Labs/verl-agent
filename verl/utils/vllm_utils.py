@@ -69,10 +69,18 @@ from typing import List
 
 from msgspec import field
 from packaging import version as vs
-from vllm.lora.models import LoRAModel
-from vllm.lora.request import LoRARequest
-from vllm.lora.utils import get_adapter_absolute_path
-from vllm.lora.worker_manager import LRUCacheWorkerLoRAManager
+
+try:
+    from vllm.lora.models import LoRAModel
+    from vllm.lora.request import LoRARequest
+    from vllm.lora.utils import get_adapter_absolute_path
+    from vllm.lora.worker_manager import LRUCacheWorkerLoRAManager
+except ImportError:
+    # vllm.lora.models was removed/restructured in vLLM 0.12+
+    LoRAModel = None
+    LoRARequest = None
+    get_adapter_absolute_path = None
+    LRUCacheWorkerLoRAManager = None
 
 from verl.third_party.vllm import get_version
 
