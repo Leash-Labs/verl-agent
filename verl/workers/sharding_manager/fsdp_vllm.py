@@ -107,7 +107,7 @@ class FSDPVLLMShardingManager(BaseShardingManager):
             self.gen_random_states = None
 
         self.base_sync_done: bool = 'dummy' not in load_format
-        if is_version_ge(pkg='vllm', minver='0.7.3'):
+        if is_version_ge(pkg='vllm', minver='0.7.3') and VLLMHijack is not None:
             VLLMHijack.hijack()
 
     @GPUMemoryLogger(role="fsdp vllm sharding_manager", logger=logger)
