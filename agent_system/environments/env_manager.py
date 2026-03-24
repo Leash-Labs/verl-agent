@@ -694,6 +694,25 @@ def make_envs(config):
         envs = AppWorldEnvironmentManager(_envs, projection_f, config)
         val_envs = AppWorldEnvironmentManager(_val_envs, projection_f, config)
         return envs, val_envs
+
+    elif "minos" in config.env.env_name.lower():
+        import sys as _sys, os as _os
+        _sys.path.insert(0, _os.path.expanduser("~/sky_workdir"))
+        from rl.env_manager import MinosEnvironmentManager
+        _cfg = config.env.minos
+        _kw = dict(
+            cache_dir=_os.path.expanduser(str(_cfg.cache_dir)),
+            max_molecules=int(_cfg.get("max_molecules", 30)),
+            algorithm=str(_cfg.get("algorithm", "grpo")),
+            win_threshold=float(_cfg.get("win_threshold", 0.5)),
+            top_k_hits=int(_cfg.get("top_k_hits", 5)),
+        )
+        _train_envs = MinosEnvironmentManager(
+            num_envs=config.data.train_batch_size * group_n, **_kw)
+        _val_envs = MinosEnvironmentManager(
+            num_envs=config.data.val_batch_size, **_kw)
+        return _train_envs, _val_envs
+
     else:
         print("Environment not supported")
         exit(1)

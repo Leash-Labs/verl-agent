@@ -299,6 +299,12 @@ env:
     num_gpus: 0
   rollout:
     n: 1 # the group number of envs (for GRPO and GiGPO).
+  minos:
+    cache_dir: ~/minos-cache
+    max_molecules: 30
+    algorithm: grpo
+    win_threshold: 0.5
+    top_k_hits: 5
   alfworld:
     eval_dataset: eval_in_distribution
   search:
