@@ -247,6 +247,13 @@ class ActorRolloutRefWorker(Worker):
                 trust_remote_code=trust_remote_code,
             )
 
+            # Freeze vision tower for VLM text-only training (e.g. Qwen3.5)
+            if self.config.model.get("freeze_vision_tower", False):
+                for name, param in actor_module.named_parameters():
+                    if "visual" in name or "vision" in name:
+                        param.requires_grad = False
+                logger.info("Froze vision tower parameters")
+
             # Apply Liger kernel to the model if use_liger is set to True
             if use_liger:
                 from liger_kernel.transformers.monkey_patch import _apply_liger_kernel_to_instance
