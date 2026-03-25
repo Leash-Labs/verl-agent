@@ -327,12 +327,13 @@ class ActorRolloutRefWorker(Worker):
         # We force turn off CPUOffload for actor because it causes incorrect results when using grad accumulation
         cpu_offload = None if role == "actor" else CPUOffload(offload_params=True)
         fsdp_strategy = self.config.actor.strategy
+        has_frozen_params = any(not p.requires_grad for p in actor_module.parameters())
         if fsdp_strategy == "fsdp":
             actor_module_fsdp = FSDP(
                 actor_module,
                 cpu_offload=cpu_offload,
                 param_init_fn=init_fn,
-                use_orig_params=False,
+                use_orig_params=has_frozen_params,  # required when some params are frozen
                 auto_wrap_policy=auto_wrap_policy,
                 device_id=get_torch_device().current_device(),
                 sharding_strategy=sharding_strategy,  # zero3
