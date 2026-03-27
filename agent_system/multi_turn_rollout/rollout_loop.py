@@ -67,6 +67,7 @@ class TrajectoryCollector:
         obs_texts = obs.get('text', None)
         obs_images = obs.get('image', None)
         obs_anchors = obs.get('anchor', None)
+        obs_tools = obs.get('tools', None)  # Tool defs from env (e.g. Minos)
         obs_text = obs_texts[item] if obs_texts is not None else None
         obs_image = obs_images[item] if obs_images is not None else None
         obs_anchor = obs_anchors[item] if obs_anchors is not None else None
@@ -74,31 +75,25 @@ class TrajectoryCollector:
 
         _obs_anchor = torch_to_numpy(obs_anchor, is_object=True) if isinstance(obs_anchor, torch.Tensor) else obs_anchor
 
-        # Build chat structure
-        # obs_content = raw_prompt[0]['content']
-        # if '<image>' in obs_content: 
-        #     obs_content = obs_content.replace('<image>', '')
-
-        # Build chat structure
-        obs_content = ''
-        if obs_text is not None:
-            obs_content += obs_text
+        # Build chat structure and apply template
+        if isinstance(obs_text, list) and obs_text and isinstance(obs_text[0], dict):
+            # Structured messages array from environment (e.g. Minos)
+            chat = obs_text
+            template_kwargs = {**apply_chat_template_kwargs}
+            if obs_tools is not None:
+                template_kwargs['tools'] = obs_tools
+            prompt_with_chat_template = self.tokenizer.apply_chat_template(
+                chat, add_generation_prompt=True, tokenize=False,
+                **template_kwargs)
         else:
-            print(f"Warning: No text observation found!")
-
-        
-        chat = np.array([{
-            "content": obs_content,
-            "role": "user",
-        }])
-        
-        # Apply chat template
-        prompt_with_chat_template = self.tokenizer.apply_chat_template(
-            chat,
-            add_generation_prompt=True,
-            tokenize=False,
-            **apply_chat_template_kwargs
-        )
+            # Legacy flat string observation
+            obs_content = obs_text if obs_text is not None else ''
+            if not obs_content and obs_text is None:
+                print(f"Warning: No text observation found!")
+            chat = [{"content": obs_content, "role": "user"}]
+            prompt_with_chat_template = self.tokenizer.apply_chat_template(
+                chat, add_generation_prompt=True, tokenize=False,
+                **apply_chat_template_kwargs)
         
         # Initialize return dict
         row_dict = {}
