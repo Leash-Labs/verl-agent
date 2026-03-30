@@ -178,7 +178,7 @@ class TrajectoryCollector:
         })
 
         if self.config.data.get('return_raw_chat', False):
-            row_dict['raw_prompt'] = chat.tolist()
+            row_dict['raw_prompt'] = chat.tolist() if hasattr(chat, 'tolist') else chat
         
         return row_dict
 
